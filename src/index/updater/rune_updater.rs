@@ -17,6 +17,65 @@ pub(super) struct RuneUpdater<'a, 'tx, 'client> {
   pub(super) transaction_id_to_rune: &'a mut Table<'tx, &'static TxidValue, u128>,
 }
 
+
+//=========test================
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_index_runes_with_custom_tx() {
+    //创建比特币客户端
+    let rpc = Client::new(
+      "http://43.133.47.138:18332",
+      Auth::UserPass("bitcoinrpc".to_string(), "moCp7cdxolUrvmeg".to_string()),
+    )
+    .expect("Failed to create RPC client");
+
+    // 交易哈希
+    let txhash_str = "0635f07784f8959da920f5309dee16cd6f4b1de36367c8bbad28ec2ccf8483fd";
+    let mut txid_bytes = hex::decode(txhash_str).expect("Invalid hex in txhash");
+    txid_bytes.reverse();
+
+    let txid = Txid::from_slice(&txid_bytes).expect("Invalid hash");
+
+    // 打印Txid
+    println!("Txid: {}", txid);
+
+    match rpc.get_raw_transaction(&txid, None) {
+      Ok(raw_tx) => {
+        println!("{:?}", raw_tx);
+        let artifact = Runestone::decipher(&raw_tx);
+        println!("artifact: {:#?}", artifact);
+
+        //   let rune_updater = RuneUpdater {
+        //     block_time: ...,
+        //     burned: HashMap::new(),
+        //     client: &rpc,
+        //     height: Some(2587737),
+        //     id_to_entry: &mut id_to_entry_table,
+        //     inscription_id_to_sequence_number: ...,
+        //     minimum: ...,
+        //     outpoint_to_balances: &mut outpoint_to_balances_table,
+        //     rune_to_id: &mut rune_to_id_table,
+        //     runes: ...,
+        //     sequence_number_to_rune_id: &mut sequence_number_to_rune_id_table,
+        //     statistic_to_count: &mut statistic_to_count_table,
+        //     transaction_id_to_rune: &mut transaction_id_to_rune_table,
+        // };
+        //开始进行index_run
+        // let tx_index = ; //这里设置tx_index
+
+        // match rune_updater.index_runes(tx_index, &raw_tx, txid) {
+        //   Ok(_) => println!("index_runes start"),
+        //   Err(err) => eprintln!("index_runes failed: {}", err),
+        // }
+      }
+      Err(e) => println!("Error fetching transaction: {:?}", e),
+    }
+  }
+}
+//=========test================
+
 impl<'a, 'tx, 'client> RuneUpdater<'a, 'tx, 'client> {
   pub(super) fn index_runes(&mut self, tx_index: u32, tx: &Transaction, txid: Txid) -> Result<()> {
     let artifact = Runestone::decipher(tx);
